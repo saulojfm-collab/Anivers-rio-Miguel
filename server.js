@@ -331,7 +331,7 @@ const server = http.createServer((req, res) => {
     "/": "index.html",
     "/app.js": "app.js",
     "/style.css": "style.css",
-    "/media/miguel-palmeiras.webp": "media/miguel-palmeiras.webp",
+    "/media/miguel-ilustrado.webp": "media/miguel-ilustrado.webp",
   };
   if (!files[path]) {
     res.writeHead(404);
