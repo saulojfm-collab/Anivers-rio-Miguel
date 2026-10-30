@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#102b20" />
+    <title>Copa do Miguel · 10 anos</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="#"
+        >⚽ <span>COPA DO <b>MIGUEL</b></span
+        ><span class="edition">10 ANOS</span></a
+      >
+      <div>
+        <span id="connection" class="connection">● Conectando</span
+        ><button id="adminButton" class="quiet">⚙ Organizador</button>
+      </div>
+    </header>
+    <main>
+      <section class="hero">
+        <div class="hero-text">
+          <span class="eyebrow"
+            >CONDOMÍNIO MARIA ISABEL 1 · EDIÇÃO ESPECIAL</span
+          >
+          <h1>Pequenos craques.<br /><em>Grandes emoções.</em></h1>
+          <p>
+            O Miguel faz 10 anos e a festa é dentro de campo.<br />Entre nessa
+            copa e faça parte da história! Seu cadastro fica salvo para a
+            divisão dos times no dia da festa.
+          </p>
+          <button class="primary" id="joinHero">
+            Quero jogar <span>↗</span></button
+          ><span class="hero-note">De 5 a 12 anos · 4 na linha + 1 no gol</span>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit"></div>
+          <span class="star s1">✦</span><span class="star s2">✧</span>
+          <div class="ball">⚽</div>
+          <div class="ten">10</div>
+          <span class="ribbon">MIGUEL FC · EST. 2016</span>
+        </div>
+        <div class="hero-bottom">
+          <span>🏆 UMA COPA PARA FICAR NA MEMÓRIA</span
+          ><span>FEITO PARA OS NOSSOS CRAQUES ↗</span>
+        </div>
+      </section>
+      <section
+        class="notice registration-banner"
+        aria-label="Inscrições antecipadas"
+      >
+        <strong>Inscreva-se agora, entre em campo na festa!</strong
+        ><br />Cadastre seu nome e escolha seu avatar. A quantidade de
+        participantes é livre; os times e o sorteio serão definidos pelo
+        organizador no dia do aniversário.
+      </section>
+      <section class="stats" id="stats"></section>
+      <nav id="tabs">
+        <button data-tab="overview" class="active">Visão geral</button
+        ><button data-tab="players">Craques inscritos</button
+        ><button data-tab="teams">Times</button
+        ><button data-tab="matches">Jogos e chaveamento</button
+        ><button data-tab="ranking">Rankings</button
+        ><button data-tab="admin" id="adminTab" hidden>Gerenciar copa</button>
+      </nav>
+      <div id="content"></div>
+      <footer>
+        ⚽ COPA DO MIGUEL <span>10 anos de alegria. Uma festa de craques.</span>
+      </footer>
+    </main>
+    <dialog id="modal">
+      <button class="close" aria-label="Fechar">×</button>
+      <div id="modalBody"></div>
+    </dialog>
+    <div role="status" id="toast"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
