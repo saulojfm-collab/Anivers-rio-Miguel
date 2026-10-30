@@ -846,3 +846,25 @@ footer {
     object-position: 50% 24%;
   }
 }
+
+.player-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.player-actions button {
+  padding: 8px 10px;
+  font-size: 11px;
+}
+.list-row .details {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .player-actions {
+    flex-direction: column;
+  }
+  .player-actions button {
+    padding: 7px 9px;
+  }
+}

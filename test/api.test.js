@@ -77,6 +77,74 @@ test("inscrição, autenticação, campeonato completo, bronze e persistência",
       400,
     );
     let s = await state();
+    const first = s.players[0];
+    assert.equal(
+      (
+        await post(
+          "edit-player",
+          { id: first.id, name: "Craque 0 Silva", age: 10, avatar: "Haaland" },
+          false,
+        )
+      ).status,
+      401,
+    );
+    assert.equal(
+      (await post("delete-player", { id: first.id }, false)).status,
+      401,
+    );
+    assert.equal(
+      (await post("edit-player", { id: first.id, name: " ", age: 10 })).status,
+      400,
+    );
+    assert.equal(
+      (await post("edit-player", { id: first.id, name: "Craque 1", age: 10 }))
+        .status,
+      400,
+    );
+    assert.equal(
+      (
+        await post("edit-player", {
+          id: first.id,
+          name: "Craque 0 Silva",
+          age: 13,
+        })
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await post("edit-player", {
+          id: first.id,
+          name: "Craque 0 Silva",
+          age: 10,
+          avatar: "Haaland",
+        })
+      ).status,
+      200,
+    );
+    assert.equal(
+      (await state()).players.find((p) => p.id === first.id).name,
+      "Craque 0 Silva",
+    );
+    await post(
+      "register",
+      { name: "Inscrição duplicada", age: 9, avatar: "Messi" },
+      false,
+    );
+    const duplicate = (await state()).players.find(
+      (p) => p.name === "Inscrição duplicada",
+    );
+    assert.equal(
+      (await post("delete-player", { id: duplicate.id })).status,
+      200,
+    );
+    assert.equal(
+      (await post("delete-player", { id: duplicate.id })).status,
+      400,
+    );
+    s = await state();
+    assert.equal(s.players.length, 8);
+
     for (let i = 0; i < 4; i++) {
       const ps = s.players.slice(i * 2, i * 2 + 2);
       assert.equal(
@@ -91,12 +159,22 @@ test("inscrição, autenticação, campeonato completo, bronze e persistência",
         200,
       );
     }
+    assert.equal(
+      (await post("delete-player", { id: first.id })).status,
+      400,
+      "Capitão não pode ficar sem referência",
+    );
     assert.equal((await post("bracket")).status, 200);
+    assert.equal(
+      (await post("delete-player", { id: s.players[1].id })).status,
+      400,
+      "Elenco fechado não pode perder jogador",
+    );
     s = await state();
     assert.equal(s.matches.length, 6);
-    assert.equal((await post('start',{match:s.matches[0].id})).status,200);
-    assert.equal((await post('start',{match:s.matches[1].id})).status,400);
-    assert.equal((await state()).matches[0].status,'live');
+    assert.equal((await post("start", { match: s.matches[0].id })).status, 200);
+    assert.equal((await post("start", { match: s.matches[1].id })).status, 400);
+    assert.equal((await state()).matches[0].status, "live");
     for (const m of s.matches) {
       const ps = s.players.filter((p) => p.team === m.a);
       assert.equal(
@@ -141,6 +219,33 @@ test("inscrição, autenticação, campeonato completo, bronze e persistência",
     assert.ok(s.matches.every((m) => m.status === "finished"));
     assert.ok(s.matches.find((m) => m.third).winner);
     assert.equal((await post("goal", { match: s.matches[0].id })).status, 400);
+    const eventsBefore = structuredClone(s.matches);
+    const scorer = s.players.find(
+      (p) => p.id === s.matches[0].events[0].scorer,
+    );
+    assert.equal((await post("delete-player", { id: scorer.id })).status, 400);
+    const assist = s.matches[0].events[0].assist;
+    assert.equal((await post("delete-player", { id: assist })).status, 400);
+    assert.equal(
+      (
+        await post("edit-player", {
+          id: scorer.id,
+          name: "Artilheiro Sobrenome",
+          age: scorer.age,
+          avatar: scorer.avatar,
+        })
+      ).status,
+      200,
+    );
+    assert.deepEqual(
+      (await state()).matches,
+      eventsBefore,
+      "Editar nome preserva partidas, gols e assistências",
+    );
+    assert.equal(
+      (await state()).players.find((p) => p.id === scorer.id).team,
+      scorer.team,
+    );
     const snapshot = await state();
     await stop();
     await start();

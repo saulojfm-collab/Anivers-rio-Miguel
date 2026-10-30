@@ -163,6 +163,47 @@ async function api(req, res, path) {
         avatar: clean(b.avatar, 30),
         team: null,
       });
+    } else if (path === "/api/edit-player") {
+      const p = state.players.find((p) => p.id === b.id);
+      if (!p) fail("Jogador não encontrado.");
+      const name = clean(b.name).replace(/\s+/g, " ");
+      if (name.length < 2) fail("Informe o nome do jogador.");
+      if (!Number.isInteger(b.age) || b.age < 5 || b.age > 12)
+        fail("A idade deve ser de 5 a 12 anos.");
+      if (
+        state.players.some(
+          (other) =>
+            other.id !== p.id &&
+            other.name.trim().replace(/\s+/g, " ").toLocaleLowerCase() ===
+              name.toLocaleLowerCase(),
+        )
+      )
+        fail(
+          "Já existe um jogador com esse nome. Acrescente o sobrenome para diferenciá-los.",
+        );
+      p.name = name;
+      p.age = b.age;
+      p.avatar = clean(b.avatar, 30);
+    } else if (path === "/api/delete-player") {
+      const p = state.players.find((p) => p.id === b.id);
+      if (!p) fail("Jogador não encontrado.");
+      if (
+        state.matches.some((m) =>
+          m.events.some((e) => e.scorer === p.id || e.assist === p.id),
+        )
+      )
+        fail(
+          "Este jogador tem gols ou assistências registrados e não pode ser excluído. Você pode editar o cadastro.",
+        );
+      if (state.teams.some((t) => t.captain === p.id))
+        fail(
+          "Este jogador é capitão. Desmonte o time e escolha outro capitão antes de excluí-lo.",
+        );
+      if (p.team && state.matches.length)
+        fail(
+          "Este jogador está em um time com campeonato gerado. Você pode editar o cadastro, mas não excluí-lo.",
+        );
+      state.players = state.players.filter((other) => other.id !== p.id);
     } else if (path === "/api/registration") {
       state.registrationOpen = !!b.open;
     } else if (path === "/api/team") {

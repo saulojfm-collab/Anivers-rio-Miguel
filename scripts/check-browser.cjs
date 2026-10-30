@@ -66,6 +66,34 @@ const fs = require("node:fs/promises");
     let s = await state();
     if (s.teams.length || s.matches.length || s.players.some((p) => p.team))
       throw Error("Inscrições antecipadas devem independer dos times");
+    await a
+      .getByRole("button", { name: "Gerenciar copa", exact: true })
+      .click();
+    await a
+      .getByRole("button", { name: "Editar Craque 1", exact: true })
+      .click();
+    await a.locator("input[name=name]").fill("Craque 1 Silva");
+    await a
+      .getByRole("button", { name: "Salvar alterações", exact: true })
+      .click();
+    await a.locator("dialog").waitFor({ state: "hidden" });
+    await g.getByText("Craque 1 Silva", { exact: true }).waitFor();
+    if (await g.locator("[data-edit-player], [data-delete-player]").count())
+      throw Error("Convidado não pode ver controles de gestão");
+    await post("register", {
+      name: "Cadastro duplicado",
+      age: 10,
+      avatar: "Messi",
+    });
+    a.once("dialog", (d) => d.accept());
+    await a
+      .getByRole("button", { name: "Excluir Cadastro duplicado", exact: true })
+      .click();
+    await a
+      .getByRole("button", { name: "Excluir Cadastro duplicado", exact: true })
+      .waitFor({ state: "detached" });
+    if ((await state()).players.length !== 20)
+      throw Error("Exclusão deveria remover somente o cadastro duplicado");
     for (let i = 0; i < 4; i++) {
       const ps = s.players.slice(i * 5, i * 5 + 5);
       await post("team", {

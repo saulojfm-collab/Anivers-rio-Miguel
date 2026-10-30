@@ -178,7 +178,7 @@ function section(title, sub = "", extra = "") {
   return `<div class="section-head"><div><h2>${title}</h2><div class="sub">${sub}</div></div>${extra}</div>`;
 }
 function playerRow(p) {
-  return `<div class="list-row"><span class="avatar">${face(p)}</span><div class="details"><b>${esc(p.name)}</b><br><small>${p.age} anos · ${esc(p.avatar)}${p.team ? " · " + tn(p.team) : " · Aguardando time"}</small></div>${team(p.team)?.captain === p.id ? '<span title="Capitão">©</span>' : ""}</div>`;
+  return `<div class="list-row"><span class="avatar">${face(p)}</span><div class="details"><b>${esc(p.name)}</b><br><small>${p.age} anos · ${esc(p.avatar)}${p.team ? " · " + tn(p.team) : " · Aguardando time"}</small></div>${team(p.team)?.captain === p.id ? '<span title="Capitão">©</span>' : ""}${state.isAdmin ? `<div class="player-actions"><button data-edit-player="${p.id}" aria-label="Editar ${esc(p.name)}">Editar</button><button class="danger" data-delete-player="${p.id}" aria-label="Excluir ${esc(p.name)}">Excluir</button></div>` : ""}</div>`;
 }
 function overview() {
   const final = state.matches.find(
@@ -396,6 +396,11 @@ function adminView() {
       '<div class="actions"><a href="/api/export" download class="quiet" style="padding:10px;color:inherit">↓ Backup da copa</a><button data-action="logout" class="quiet">Sair</button></div>',
     ) +
     `<div class="notice">📋 Condomínio Maria Isabel 1 · A quantidade de jogadores e times é variável. ${rosterSuggestion()} Primeiro cadastre os participantes; depois monte times equilibrados, escolhendo capitães. Todos contra todos: vitória vale 3 pontos, empate 1. Com 4 ou mais times, os quatro primeiros vão às semifinais; com 2 ou 3, os dois primeiros vão à final. Com 2 times, a classificação tem ida e volta. Ao gerar os jogos, os times ficam fechados. Durante os jogos, lance um gol de cada vez e selecione o autor e a assistência.</div><div class="grid"><div class="card"><h3>1. Inscrições</h3><p class="sub">${state.players.length} participantes · ${state.registrationOpen ? "Abertas" : "Encerradas"}</p><button data-action="registration">${state.registrationOpen ? "Encerrar inscrições" : "Reabrir inscrições"}</button></div><div class="card"><h3>2. Montar equipes</h3><p class="sub">${state.players.filter((p) => !p.team).length} jogadores aguardando time</p><button data-action="team" ${state.matches.length ? "disabled" : ""}>+ Cadastrar time</button></div><div class="card"><h3>3. Gerar campeonato</h3><p class="sub">${state.teams.length} equipes · Sorteio aleatório dos confrontos.</p><button data-action="bracket" ${state.matches.length || state.teams.length < 2 ? "disabled" : ""}>🏆 Gerar jogos</button></div></div>` +
+    section(
+      "Gerenciar jogadores",
+      "Corrija nomes e sobrenomes ou remova inscrições duplicadas. As alterações aparecem para todos.",
+    ) +
+    `<div class="card">${state.players.length ? state.players.map(playerRow).join("") : empty("👟", "Nenhum jogador inscrito", "As inscrições aparecerão aqui.")}</div>` +
     matchesView()
   );
 }
@@ -529,6 +534,19 @@ $("#content").onclick = async (e) => {
   const b = e.target.closest("button");
   if (!b) return;
   try {
+    if (b.dataset.editPlayer) return editPlayer(b.dataset.editPlayer);
+    if (b.dataset.deletePlayer) {
+      const p = player(b.dataset.deletePlayer);
+      if (
+        confirm(
+          `Excluir o cadastro de ${p.name}? Esta ação não pode ser desfeita.`,
+        )
+      ) {
+        await post("delete-player", { id: p.id });
+        toast("Cadastro excluído.");
+      }
+      return;
+    }
     if (b.dataset.start) return await post("start", { match: b.dataset.start });
     if (b.dataset.goal) return goal(b.dataset.goal);
     if (b.dataset.finish) return finishGame(b.dataset.finish);
@@ -646,4 +664,29 @@ function rosterSuggestion() {
   const full = Math.floor(count / 5),
     extra = count % 5;
   return `${count} jogadores inscritos até agora. A referência é 4 na linha + 1 goleiro, com flexibilidade para reservas e equilíbrio.${full >= 2 ? ` Hoje daria para montar ${full} equipes completas de cinco${extra ? ` e distribuir ${extra} jogador${extra > 1 ? "es" : ""} como reservas ou reequilibrar os elencos` : ""}.` : ""}`;
+}
+
+function editPlayer(playerId) {
+  const p = player(playerId);
+  form(
+    `<h2>Editar jogador</h2><p class="sub">Acrescente o sobrenome ou corrija os dados. O time e os gols e assistências deste jogador são preservados.</p><label>Nome e sobrenome</label><input name="name" required minlength="2" maxlength="45" autocomplete="off" value="${esc(p.name)}"><label>Idade</label><select name="age">${Array.from({ length: 8 }, (_, i) => `<option value="${i + 5}" ${p.age === i + 5 ? "selected" : ""}>${i + 5}</option>`).join("")}</select><label>Ídolo do jogador</label><select name="avatar">${Object.keys(
+      icons,
+    )
+      .map(
+        (name) =>
+          `<option value="${esc(name)}" ${p.avatar === name ? "selected" : ""}>${esc(name)}</option>`,
+      )
+      .join(
+        "",
+      )}</select><button type="submit" class="primary full">Salvar alterações</button>`,
+    async (f) => {
+      await post("edit-player", {
+        id: p.id,
+        name: f.get("name"),
+        age: Number(f.get("age")),
+        avatar: f.get("avatar"),
+      });
+      toast("Cadastro atualizado!");
+    },
+  );
 }
