@@ -331,6 +331,7 @@ const server = http.createServer((req, res) => {
     "/": "index.html",
     "/app.js": "app.js",
     "/style.css": "style.css",
+    "/media/miguel-palmeiras.webp": "media/miguel-palmeiras.webp",
   };
   if (!files[path]) {
     res.writeHead(404);
@@ -341,11 +342,13 @@ const server = http.createServer((req, res) => {
     .then((data) => {
       res.setHeader(
         "Content-Type",
-        path.endsWith(".js")
-          ? "text/javascript"
-          : path.endsWith(".css")
-            ? "text/css"
-            : "text/html; charset=utf-8",
+        path.endsWith(".webp")
+          ? "image/webp"
+          : path.endsWith(".js")
+            ? "text/javascript"
+            : path.endsWith(".css")
+              ? "text/css"
+              : "text/html; charset=utf-8",
       );
       res.end(data);
     })
